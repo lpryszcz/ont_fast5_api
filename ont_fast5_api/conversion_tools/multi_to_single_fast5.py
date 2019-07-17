@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 from __future__ import division
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 from multiprocessing import Pool
 from collections import deque
 import logging
@@ -113,7 +115,7 @@ def main():
                         help="Folder to output SingleRead fast5 files to")
     parser.add_argument('-r', '--recursive', action='store_true',
                         help="Search recursively through folders for for MultiRead fast5 files")
-    parser.add_argument('-l', '--limit_by_read_ids', type=file, 
+    parser.add_argument('-l', '--limit_by_read_ids', type=FileType('r'), default=None, 
                         help="Output only reads with ids in the file")
     parser.add_argument('-t', '--threads', type=int, default=1, required=False,
                         help="Number of threads to use")
