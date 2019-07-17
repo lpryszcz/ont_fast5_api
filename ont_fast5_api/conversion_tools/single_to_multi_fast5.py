@@ -88,7 +88,7 @@ def add_read_to_multi_fast5(multi_f5, single_f5, revert=False):
     for group in single_f5.handle["UniqueGlobalKey"]:
         read.handle.copy(single_f5.handle["UniqueGlobalKey/{}".format(group)], group)
         
-    if not revert:
+    if revert:
         # Skip any additional entries if revert
         return
         
