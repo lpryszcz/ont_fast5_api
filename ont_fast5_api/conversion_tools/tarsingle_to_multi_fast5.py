@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from multiprocessing import Pool
 from collections import deque
 import logging
-import os, sys
+import os, sys, re
 
 from ont_fast5_api import __version__
 from ont_fast5_api.conversion_tools.conversion_utils import get_fast5_file_list, batcher, get_progress_bar
@@ -17,11 +17,19 @@ exc_info = False
 
 import tarfile, urllib, urllib.request
 
+# match all supported extensions
+tarpat = re.compile('\.tar$|\.tgz$|\.tar\.gz$|\.tar\.gz.\d+$')
+
 def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch_size,
                                      tmp_dir, revert):
     # https://sra-pub-src-1.s3.amazonaws.com/SRR7415631/barcode05_bsubtilis_pass.tar.gz.1
     # ~/cluster/dna_mods/ecoli/_archives/tar/$acc/barcode05_bsubtilis_pass.tar.gz.1
-    output_folder = os.path.join(save_path, os.path.basename(input_path).split(".")[0])
+    m = tarpat.findall(os.path.basename(input_path))
+    if not m:
+        print("Unsupported file extension!")
+        return
+    # strip extension from file name
+    output_folder = os.path.join(save_path, os.path.basename(input_path)[:-len(m[0])])
     # create outdir
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -31,7 +39,7 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
     print("Saving %s to %s ..."%(input_path, output_folder))
     # get mode
     mode = "r:gz" if ".gz" in input_path else "r"
-    # and stream - AttributeError: '_Stream' object has no attribute 'seekable'
+    # open tar file, either remote or local, getting filesize
     if input_path.startswith(("ftp", "http", "www")):
         stream = urllib.request.urlopen(input_path)
         f = tarfile.open(fileobj=stream, mode=mode)
@@ -68,7 +76,7 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
                 os.remove(handle)
             fi += 1
     output_table.close()
-    print("\n %s reads stored in %s Fast5 files.      "%(fi, int(fi/batch_size)+1))
+    print(" %s reads stored in %s Fast5 files.      "%(fi, int(fi/batch_size)+1))
             
 def main():
     parser = ArgumentParser("")
