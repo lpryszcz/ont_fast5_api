@@ -74,8 +74,12 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
             f.extract(tarinfo, path=tmp_dir)
             # get tar handle - reading from tar.gz is slooow, likely due to many seeks
             #handle = f.extractfile(tarinfo) #
-            # open single & multi fast5 
-            single_f5 = Fast5File(handle, 'r')
+            # open single & multi fast5
+            try:
+                single_f5 = Fast5File(handle, 'r')
+            except Exception as e:
+                print("[ERROR] at %s"%tarinfo.name)#, e)
+                continue
             # store info
             add_read_to_multi_fast5(multi_f5, single_f5, revert)
             # store filename_mapping
