@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 exc_info = False
 
-import tarfile, urllib.request
+import tarfile, urllib, urllib.request
 
 def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch_size,
                                      tmp_dir, revert):
@@ -35,8 +35,10 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
     if input_path.startswith(("ftp", "http", "www")):
         stream = urllib.request.urlopen(input_path)
         f = tarfile.open(fileobj=stream, mode=mode)
+        filesize = int(stream.info()['Content-Length'])
     else:
         f = tarfile.open(input_path, mode)
+        filesize = os.path.getsize(input_path)
     fi = 0
     output_table = open(os.path.join(output_folder, "filename_mapping.txt"), 'w')
     output_table.write("single_read_file\tmulti_read_file\n")    
@@ -46,7 +48,9 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
             if not fi % batch_size:
                 multi_read_file = os.path.join(output_folder, "{}_{}.fast5".format(filename_base, int(fi/batch_size)))
                 multi_f5 = MultiFast5File(multi_read_file, 'w')
-            sys.stderr.write(" %s %s \r"%(fi, multi_read_file))
+            # report progress - it doesn't work for gzipped files
+            if not fi%100:
+                sys.stderr.write(" %s reads [%5.1f%s]\r"%(fi, 100.*f.fileobj.fileobj.tell()/filesize, '%'))
             # extract to tmpdir, ideally to ramdrive so no disk I/O is involved
             single_read_file = tarinfo.name
             handle = os.path.join(tmp_dir, tarinfo.name)
@@ -64,7 +68,7 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
                 os.remove(handle)
             fi += 1
     output_table.close()
-    print(" %s reads stored in %s Fast5 files"%(fi, int(fi/batch_size)+1))
+    print("\n %s reads stored in %s Fast5 files.      "%(fi, int(fi/batch_size)+1))
             
 def main():
     parser = ArgumentParser("")
