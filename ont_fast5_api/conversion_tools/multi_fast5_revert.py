@@ -17,10 +17,10 @@ def batch_reverter(input_path, output_folder, filename_base, batch_size, threads
     file_list = get_fast5_file_list(input_path, recursive)
     file_list = file_list[::-1]
     print("%s files to process..."%len(file_list))
-    fi = ri = 0
+    fi, ri = 0, -1
     for i, input_file in enumerate(file_list, 1):
         with MultiFast5File(input_file, 'r') as input_f5:
-            for ri, read in enumerate(input_f5.get_read_ids(), ri):
+            for ri, read in enumerate(input_f5.get_read_ids(), ri+1):
                 sys.stderr.write(" %s %s %s %s  \r"%(fi, ri, read, input_file))
                 if not ri%batch_size:
                     output_f5 = MultiFast5File(os.path.join(output_folder, "%s_%s.fast5"%(filename_base, fi)), 'w')

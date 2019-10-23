@@ -113,10 +113,12 @@ def main():
                         help="Number of threads to use")
     parser.add_argument('-r', '--recursive', action='store_true',
                         help="Search recursively through folders for for single_read fast5 files")
+    parser.add_argument('--revert', action='store_true',
+                        help="Revert Fast5 to original content. This will drop basecalling and other analyses.")
     parser.add_argument('-v', '--version', action='version', version=__version__)
     args = parser.parse_args()
 
-    batch_convert_single_to_multi(args.input_path, args.save_path, args.filename_base, args.batch_size, args.threads, args.recursive)
+    batch_convert_single_to_multi(args.input_path, args.save_path, args.filename_base, args.batch_size, args.threads, args.recursive, args.revert)
 
 
 if __name__ == '__main__':
