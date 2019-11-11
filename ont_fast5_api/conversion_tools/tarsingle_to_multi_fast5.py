@@ -28,7 +28,13 @@ def get_progress_local(f, filesize):
 
 def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch_size,
                                      tmp_dir, revert):
+    """Convert archives with single Fast5 files into multi_fast5 files,
+    optionally reverting to raw data (stripping all analyses from Fast5). 
+
+    Note, for large tar archives, it'll occupy lots of memory with time. WHY??!!
+    """
     # https://sra-pub-src-1.s3.amazonaws.com/SRR7415631/barcode05_bsubtilis_pass.tar.gz.1
+    # ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR288/ERR2887851/Zymo-PromethION-LOG-BB-SN_signal.tar.gz
     # ~/cluster/dna_mods/ecoli/_archives/tar/$acc/barcode05_bsubtilis_pass.tar.gz.1
     m = tarpat.findall(os.path.basename(input_path))
     if not m:
@@ -61,13 +67,14 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
     output_table.write("single_read_file\tmulti_read_file\n")    
     for tarinfo in f:
         if os.path.splitext(tarinfo.name)[-1] == ".fast5":
-            # open new multi_fast5 file every batch_size of reads
-            if not fi % batch_size:
-                multi_read_file = os.path.join(output_folder, "{}_{}.fast5".format(filename_base, int(fi/batch_size)))
-                multi_f5 = MultiFast5File(multi_read_file, 'w')
             # report progress
             if not fi%100:
                 sys.stderr.write(" %s reads [%5.1f%s]\r"%(fi, get_progress(f, filesize), '%'))
+            # open new multi_fast5 file every batch_size of reads
+            if not fi % batch_size:
+                f.members = []
+                multi_read_file = os.path.join(output_folder, "{}_{}.fast5".format(filename_base, int(fi/batch_size)))
+                multi_f5 = MultiFast5File(multi_read_file, 'w')
             # extract to tmpdir, ideally to ramdrive so no disk I/O is involved
             single_read_file = tarinfo.name
             handle = os.path.join(tmp_dir, tarinfo.name)
@@ -114,4 +121,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.stderr.write("\nCtrl-C pressed!      \n")
