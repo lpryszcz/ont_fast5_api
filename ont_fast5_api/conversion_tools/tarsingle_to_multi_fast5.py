@@ -69,7 +69,7 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
         if os.path.splitext(tarinfo.name)[-1] == ".fast5":
             # report progress
             if not fi%100:
-                sys.stderr.write(" %s reads [%5.1f%s]\r"%(fi, get_progress(f, filesize), '%'))
+                sys.stderr.write(" %s reads \r"%fi) #[%5.1f%s]\r"%(fi, get_progress(f, filesize), '%'))
             # open new multi_fast5 file every batch_size of reads
             if not fi % batch_size:
                 f.members = []

@@ -101,7 +101,7 @@ def add_read_to_multi_fast5(multi_f5, single_f5, revert=False):
 
 def main():
     parser = ArgumentParser("")
-    parser.add_argument('-i', '--input_path', required=True,
+    parser.add_argument('-i', '--input_path', nargs="+",
                         help='Folder containing single read fast5 files')
     parser.add_argument('-s', '--save_path', required=True,
                         help="Folder to output multi read files to")
@@ -118,7 +118,8 @@ def main():
     parser.add_argument('-v', '--version', action='version', version=__version__)
     args = parser.parse_args()
 
-    batch_convert_single_to_multi(args.input_path, args.save_path, args.filename_base, args.batch_size, args.threads, args.recursive, args.revert)
+    for input_path in args.input_path:
+        batch_convert_single_to_multi(input_path, args.save_path, args.filename_base, args.batch_size, args.threads, args.recursive, args.revert)
 
 
 if __name__ == '__main__':
