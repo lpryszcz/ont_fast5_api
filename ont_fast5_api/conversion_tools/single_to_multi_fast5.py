@@ -58,6 +58,7 @@ def create_multi_read_file(input_files, output_file, revert=False):
         os.makedirs(os.path.dirname(output_file))
     if os.path.exists(output_file):
         logger.info("FileExists - appending new reads to existing file: {}".format(output_file))
+    #'''
     try:
         with MultiFast5File(output_file, 'a') as multi_f5:
             for filename in input_files:
@@ -73,7 +74,13 @@ def create_multi_read_file(input_files, output_file, revert=False):
                      "".format(e, output_file), exc_info=exc_info)
     finally:
         return results
-
+    '''
+    with MultiFast5File(output_file, 'a') as multi_f5:
+        for filename in input_files:
+            with Fast5File(filename, 'r') as single_f5:
+                add_read_to_multi_fast5(multi_f5, single_f5, revert)
+                results.append(os.path.basename(filename))
+    #'''
 
 def add_read_to_multi_fast5(multi_f5, single_f5, revert=False):
     read_number = single_f5._get_only_read_number()
@@ -87,7 +94,12 @@ def add_read_to_multi_fast5(multi_f5, single_f5, revert=False):
     # Copy UniqueGlobalKey data into new file
     for group in single_f5.handle["UniqueGlobalKey"]:
         read.handle.copy(single_f5.handle["UniqueGlobalKey/{}".format(group)], group)
-        
+
+    '''# add attr median_before from likely old single Fast5 version
+    attrs = single_f5.handle["Analyses/EventDetection_000/Reads/Read_{}".format(read_number)].attrs#["median_before"]
+    if "median_before" in attrs:
+        read.handle["Raw"].attrs["median_before"] = attrs["median_before"]#; print(attrs["median_before"])
+    ''' 
     if revert:
         # Skip any additional entries if revert
         return

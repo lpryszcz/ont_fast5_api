@@ -21,6 +21,7 @@ import tarfile, urllib, urllib.request
 tarpat = re.compile('\.tar$|\.tgz$|\.tar\.gz$|\.tar\.gz.\d+$')
 
 def get_progress_remote(f, filesize):
+    # this results sometimes in AttributeError: '_io.BufferedReader' object has no attribute 'length'
     return 100.*(filesize-f.fileobj.fileobj.length)/filesize
 
 def get_progress_local(f, filesize):
@@ -69,7 +70,8 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
         if os.path.splitext(tarinfo.name)[-1] == ".fast5":
             # report progress
             if not fi%100:
-                sys.stderr.write(" %s reads \r"%fi) #[%5.1f%s]\r"%(fi, get_progress(f, filesize), '%'))
+                sys.stderr.write(" %s reads \r"%fi)
+                #sys.stderr.write(" %s reads [%5.1f%s] \r"%(fi, get_progress(f, filesize), '%'))
             # open new multi_fast5 file every batch_size of reads
             if not fi % batch_size:
                 f.members = []
