@@ -51,7 +51,7 @@ def batch_convert_tarsingle_to_multi(input_path, save_path, filename_base, batch
         return
     print("Saving %s to %s ..."%(input_path, output_folder))
     # get mode
-    mode = "r:gz" if ".gz" in input_path else "r"
+    mode = "r:gz" if input_path.endswith("gz") else "r"
     # open tar file, either remote or local, getting filesize
     if input_path.startswith(("ftp", "http", "www")):
         stream = urllib.request.urlopen(input_path)
